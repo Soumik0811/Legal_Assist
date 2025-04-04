@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { generateLegalAnalysis } from "./together-api";
+import axios from "axios";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up API route for legal assistant
@@ -218,6 +219,58 @@ Important formatting instructions:
       }
     } catch (error) {
       console.error('Error in case-law API:', error);
+      res.status(500).json({ 
+        error: error instanceof Error ? error.message : 'An unknown error occurred' 
+      });
+    }
+  });
+
+  // Indian Kanoon API endpoint for real case law data
+  app.get("/api/indian-kanoon", async (req, res) => {
+    try {
+      const query = req.query.query as string;
+      
+      if (!query) {
+        return res.status(400).json({ error: 'Query parameter is required' });
+      }
+      
+      // Indian Kanoon API token
+      const API_TOKEN = "afa652f1395763d62d114430ddecb198bf7199c6";
+      const HEADERS = { "Authorization": `Token ${API_TOKEN}` };
+      
+      try {
+        // Fetch data from the Indian Kanoon API
+        const response = await axios.post(
+          `https://api.indiankanoon.org/search/?formInput=${encodeURIComponent(query)}`,
+          null, // no data in request body
+          { headers: HEADERS }
+        );
+        
+        // Extract relevant information from the API response
+        const data = response.data;
+        const results = [];
+        
+        for (const doc of data.docs || []) {
+          results.push({
+            title: doc.title || 'N/A',
+            headline: doc.headline || 'N/A',
+            publishdate: doc.publishdate || 'N/A',
+            docsource: doc.docsource || 'N/A',
+            tid: doc.tid || 'N/A'
+          });
+        }
+        
+        res.json({ results });
+      } catch (apiError) {
+        console.error('Error calling Indian Kanoon API:', apiError);
+        return res.status(500).json({ 
+          error: apiError instanceof Error 
+            ? apiError.message 
+            : 'Error fetching case law data from Indian Kanoon'
+        });
+      }
+    } catch (error) {
+      console.error('Error in indian-kanoon API:', error);
       res.status(500).json({ 
         error: error instanceof Error ? error.message : 'An unknown error occurred' 
       });
