@@ -18,48 +18,40 @@ export default function Header() {
         <nav>
           <ul className="flex space-x-1 sm:space-x-4">
             <li>
-              <Link href="/">
-                <a className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              <Link href="/" className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   location === '/' 
                     ? 'bg-gray-700 text-white' 
                     : 'text-gray-300 hover:bg-gray-700 hover:text-white'
                 }`}>
-                  <Home className="w-4 h-4 sm:hidden" />
-                  <span className="hidden sm:inline">Home</span>
-                </a>
+                <Home className="w-4 h-4 sm:hidden" />
+                <span className="hidden sm:inline">Home</span>
               </Link>
             </li>
             <li>
-              <Link href="/legal-assistant">
-                <a className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              <Link href="/legal-assistant" className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   location === '/legal-assistant' 
                     ? 'bg-blue-900/50 text-blue-300' 
                     : 'text-gray-300 hover:bg-gray-700 hover:text-white'
                 }`}>
                   Legal Assistant
-                </a>
               </Link>
             </li>
             <li>
-              <Link href="/general-chat">
-                <a className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              <Link href="/general-chat" className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   location === '/general-chat' 
                     ? 'bg-green-900/50 text-green-300' 
                     : 'text-gray-300 hover:bg-gray-700 hover:text-white'
                 }`}>
                   General Chat
-                </a>
               </Link>
             </li>
             <li>
-              <Link href="/case-law">
-                <a className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              <Link href="/case-law" className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   location === '/case-law' 
                     ? 'bg-purple-900/50 text-purple-300' 
                     : 'text-gray-300 hover:bg-gray-700 hover:text-white'
                 }`}>
                   Case Law
-                </a>
               </Link>
             </li>
           </ul>
