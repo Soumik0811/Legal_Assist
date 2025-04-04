@@ -13,14 +13,12 @@ interface ModuleCardProps {
 
 function ModuleCard({ title, description, icon, color, to }: ModuleCardProps) {
   return (
-    <Link href={to}>
-      <a className={`block p-6 bg-gray-800 rounded-lg border border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 hover:translate-y-[-5px] cursor-pointer`}>
-        <div className={`rounded-full w-14 h-14 flex items-center justify-center mb-4 ${color}`}>
-          {icon}
-        </div>
-        <h3 className="text-xl font-semibold mb-2 text-white">{title}</h3>
-        <p className="text-gray-300">{description}</p>
-      </a>
+    <Link href={to} className={`block p-6 bg-gray-800 rounded-lg border border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 hover:translate-y-[-5px] cursor-pointer`}>
+      <div className={`rounded-full w-14 h-14 flex items-center justify-center mb-4 ${color}`}>
+        {icon}
+      </div>
+      <h3 className="text-xl font-semibold mb-2 text-white">{title}</h3>
+      <p className="text-gray-300">{description}</p>
     </Link>
   );
 }

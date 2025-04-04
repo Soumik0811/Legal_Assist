@@ -52,8 +52,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: 'Missing Together API key' });
       }
       
-      // Use the Together API with a more general prompt for the chatbot
+      // Use the Together API with a more structured prompt for the chatbot
       try {
+        // Create a system message and prompt for better formatting
+        const systemMessage = 'You are a helpful assistant specializing in legal information. Answer questions clearly and concisely with proper formatting and structure. Remember that you\'re not providing legal advice - just general information. When discussing legal concepts, be accurate and explain them in simple terms.';
+        
+        const userPrompt = `
+Answer the following question with detailed information and proper structure.
+
+Question: ${query}
+
+Ensure your response follows this format with proper markdown formatting:
+
+## Answer
+Provide a comprehensive answer to the question with clear explanations.
+
+## Key Points
+- **Point 1**: Important information relating to the question
+- **Point 2**: Additional relevant information
+- (Add more points as needed)
+
+## Additional Information
+Any supplementary details or context that might be helpful.
+
+Important formatting instructions:
+1. Use markdown headings with ## for main sections
+2. Use bold (**) for emphasizing key terms
+3. Use bullet points (-) for listing information
+4. Use proper paragraph spacing between sections
+`;
+
         const response = await fetch("https://api.together.xyz/v1/chat/completions", {
           method: "POST",
           headers: {
@@ -65,15 +93,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
             messages: [
               {
                 role: "system",
-                content: "You are a helpful assistant specializing in legal information. Answer questions clearly and concisely, but remember that you're not providing legal advice - just general information. When discussing legal concepts, be accurate and explain them in simple terms."
+                content: systemMessage
               },
               {
                 role: "user",
-                content: query
+                content: userPrompt
               }
             ],
             temperature: 0.7,
-            max_tokens: 800
+            max_tokens: 1200
           }),
         });
 
