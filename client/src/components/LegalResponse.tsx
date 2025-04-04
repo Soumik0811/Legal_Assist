@@ -10,7 +10,6 @@ export default function LegalResponse({ response }: LegalResponseProps) {
   marked.setOptions({
     gfm: true, // GitHub flavored markdown
     breaks: true, // Convert line breaks to <br>
-    headerIds: false, // Don't generate IDs for headers
   });
   
   // Custom styles for markdown elements
