@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Case Law Search - LegalAI</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+  <style>
+    /* Custom styles for loading indicator */
+    .loading-indicator {
+      display: none;
+      text-align: center;
+      margin-top: 20px;
+    }
+    .loading-indicator.show {
+      display: block;
+    }
+    .spinner-border {
+      width: 3rem;
+      height: 3rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="{{ url_for('home') }}">LegalAssist</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('home') }}">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('fir_drafting') }}">Draft FIR</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link " href="{{ url_for('legal_qa') }}">Legal Q&A</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" href="{{ url_for('case_law_search') }}">Case Law Search</a>
+            </li>
+            <li class="nav-item">
+              <select class="language-selector">
+                <option>English</option>
+                <option>Hindi</option>
+                <option>Spanish</option>
+              </select>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  <!-- Search Bar Section -->
+  <section class="search-section">
+    <div class="container">
+      <h2 class="text-center mb-4">Case Law Search</h2>
+      <div class="search-bar d-flex justify-content-center">
+        <input type="text" id="search-input" class="form-control w-50 me-2" placeholder="Search case laws...">
+        <button id="search-button" class="btn btn-primary">Search</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Loading Indicator -->
+  <div class="loading-indicator" id="loading-indicator">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2">Searching...</p>
+  </div>
+
+  <!-- Search Results Section -->
+  <section class="results-section">
+    <div class="container">
+      <h3 class="mb-4">Search Results</h3>
+      <div class="table-responsive">
+        <table class="table table-hover" id="results-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Publish Date</th>
+              <th>Source</th>
+              <th>Headline</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="results-body">
+            <!-- Results will be dynamically inserted here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="text-center">
+    <div class="container">
+      <p class="mb-0">AI-powered Legal Assistance for Accurate FIR Drafting. Our advanced AI system analyzes crime scenarios and suggests relevant sections of the Indian Penal Code, helping police officers draft First Information Reports with precision and legal accuracy.</p>
+      <div class="social-icons">
+        <a href="#"><i class="fab fa-facebook"></i></a>
+        <a href="#"><i class="fab fa-twitter"></i></a>
+        <a href="#"><i class="fab fa-linkedin"></i></a>
+        <a href="#"><i class="fab fa-instagram"></i></a>
+      </div>
+      <p class="mt-3">&copy; 2023 LegalAI. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.getElementById('search-button').addEventListener('click', function () {
+      const query = document.getElementById('search-input').value.trim();
+      if (!query) {
+        alert('Please enter a search query.');
+        return;
+      }
+
+      // Show loading indicator
+      document.getElementById('loading-indicator').classList.add('show');
+
+      // Clear previous results
+      document.getElementById('results-body').innerHTML = '';
+
+      // Fetch results from the Flask backend
+      fetch(`/search?query=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(data => {
+          const resultsBody = document.getElementById('results-body');
+
+          // Hide loading indicator
+          document.getElementById('loading-indicator').classList.remove('show');
+
+          if (data.error) {
+            resultsBody.innerHTML = `<tr><td colspan="5" class="text-center">${data.error}</td></tr>`;
+            return;
+          }
+
+          if (data.length === 0) {
+            resultsBody.innerHTML = '<tr><td colspan="5" class="text-center">No results found.</td></tr>';
+            return;
+          }
+
+          data.forEach(result => {
+            const row = `
+              <tr>
+                <td>${result.title || 'N/A'}</td>
+                <td>${result.publishdate || 'N/A'}</td>
+                <td>${result.docsource || 'N/A'}</td>
+                <td>${result.headline || 'N/A'}</td>
+                <td><a href="https://www.indiankanoon.org/doc/${result.tid}/" target="_blank" class="btn btn-outline-primary">View Details</a></td>
+              </tr>
+            `;
+            resultsBody.innerHTML += row;
+          });
+        })
+        .catch(error => {
+          console.error('Error fetching data:', error);
+          document.getElementById('results-body').innerHTML = `<tr><td colspan="5" class="text-center">An error occurred while fetching results.</td></tr>`;
+          // Hide loading indicator
+          document.getElementById('loading-indicator').classList.remove('show');
+        });
+    });
+  </script>
+</body>
+</html>
