@@ -1,10 +1,158 @@
-import type { Express } from "express";
+import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { generateLegalAnalysis } from "./together-api";
 import axios from "axios";
+import OpenAI from "openai";
+import multer from "multer";
+import * as fs from "fs";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize OpenAI client
+  const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+  
+  // Set up multer for file uploads
+  const upload = multer({
+    dest: 'uploads/', 
+    limits: { fileSize: 10 * 1024 * 1024 } // 10 MB limit
+  });
+
+  // Audio transcription endpoint using OpenAI Whisper
+  app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'No audio file provided' });
+      }
+
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(500).json({ error: 'OpenAI API key is not configured' });
+      }
+
+      // Check if language parameter was provided
+      const language = req.body.language || 'en';
+      console.log(`Processing audio file: ${req.file.path}, language: ${language}`);
+
+      try {
+        // Use OpenAI's Whisper model for transcription
+        const transcription = await openai.audio.transcriptions.create({
+          file: fs.createReadStream(req.file.path),
+          model: "whisper-1",
+          language: language, // Use the specified language
+          response_format: "text"
+        });
+
+        // Clean up the temporary file
+        fs.unlink(req.file.path, (err) => {
+          if (err) console.error('Error deleting temp file:', err);
+        });
+
+        let finalText = transcription;
+
+        // If language is Hindi, translate it to English
+        if (language === 'hi') {
+          try {
+            const translationResponse = await openai.chat.completions.create({
+              model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+              messages: [
+                {
+                  role: "system",
+                  content: "You are a highly skilled Hindi to English translator. Translate the given Hindi text to English."
+                },
+                {
+                  role: "user",
+                  content: `Translate this Hindi text to English: ${transcription}`
+                }
+              ],
+              temperature: 0.2,
+              max_tokens: 500
+            });
+
+            // Extract the translated text
+            finalText = translationResponse.choices[0].message.content ?? '';
+            console.log(`Translated text from Hindi to English: ${finalText.substring(0, 100)}...`);
+          } catch (translationError) {
+            console.error('Translation error:', translationError);
+            // Still return the original transcription if translation fails
+          }
+        }
+
+        // Return the transcription or translation
+        res.json({ text: finalText });
+      } catch (apiError) {
+        console.error('OpenAI transcription error:', apiError);
+        return res.status(500).json({ 
+          error: apiError instanceof Error 
+            ? apiError.message 
+            : 'Error transcribing audio with OpenAI Whisper' 
+        });
+      }
+    } catch (error) {
+      console.error('Error in transcription API:', error);
+      res.status(500).json({ 
+        error: error instanceof Error ? error.message : 'An unknown error occurred' 
+      });
+      
+      // Clean up on error
+      if (req.file?.path) {
+        fs.unlink(req.file.path, () => {});
+      }
+    }
+  });
+  
+  // Text translation endpoint using OpenAI
+  app.post('/api/translate', async (req, res) => {
+    try {
+      const { text, source_lang, target_lang } = req.body;
+      
+      if (!text) {
+        return res.status(400).json({ error: 'Text is required' });
+      }
+      
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(500).json({ error: 'OpenAI API key is not configured' });
+      }
+      
+      console.log(`Translating text from ${source_lang} to ${target_lang}`);
+      
+      try {
+        // Use OpenAI's GPT-4 model for translation
+        const translationResponse = await openai.chat.completions.create({
+          model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+          messages: [
+            {
+              role: "system",
+              content: `You are a highly skilled ${source_lang} to ${target_lang} translator. Translate the given text accurately.`
+            },
+            {
+              role: "user",
+              content: `Translate this ${source_lang} text to ${target_lang}: ${text}`
+            }
+          ],
+          temperature: 0.2,
+          max_tokens: 500
+        });
+        
+        // Extract the translated text
+        const translatedText = translationResponse.choices[0].message.content;
+        
+        res.json({ translated_text: translatedText });
+      } catch (apiError) {
+        console.error('OpenAI translation error:', apiError);
+        return res.status(500).json({ 
+          error: apiError instanceof Error 
+            ? apiError.message 
+            : 'Error translating text with OpenAI' 
+        });
+      }
+    } catch (error) {
+      console.error('Error in translation API:', error);
+      res.status(500).json({ 
+        error: error instanceof Error ? error.message : 'An unknown error occurred' 
+      });
+    }
+  });
   // Set up API route for legal assistant
   app.post('/api/legal-assist', async (req, res) => {
     try {
