@@ -9,18 +9,30 @@
 export async function generateLegalAnalysis(query: string): Promise<string> {
   try {
     // Create a prompt for legal analysis
-    const systemMessage = 'You are a legal assistant specializing in Indian Penal Code (IPC). Provide relevant IPC sections and brief explanations for given scenarios.';
+    const systemMessage = 'You are a legal assistant specializing in Indian Penal Code (IPC). Always format your responses using proper markdown with clear headers and consistent structure.';
     
     const userPrompt = `
-Analyze the following scenario and provide:
-
-1. Applicable IPC Sections with their titles and brief descriptions
-2. A detailed explanation of how these sections apply to the scenario
-3. Potential legal consequences including punishments
+Analyze the following scenario and provide a detailed legal analysis according to the Indian Penal Code (IPC).
 
 Scenario: ${query}
 
-Format your response clearly with headers for each section.
+Ensure your response follows this EXACT format with proper markdown formatting:
+
+## Applicable IPC Sections
+For each applicable section, use this format:
+- **Section XXX - [Section Title]**: Brief description of the section
+
+## Explanation
+Detailed explanation of why and how these sections apply to the scenario. Use clear paragraphs with proper spacing.
+
+## Potential Legal Consequences
+Detailed information about potential punishments and penalties for each applicable section.
+
+Important formatting instructions:
+1. Use markdown headings with ## for main sections
+2. Use bold (**) for section numbers and titles
+3. Use bullet points (-) for listing sections
+4. Use proper paragraph spacing between sections
 `;
 
     // Prepare the request body for Together AI API
@@ -79,18 +91,30 @@ Format your response clearly with headers for each section.
 export async function generateLegalAnalysisQwen(query: string): Promise<string> {
   try {
     // Create a prompt for legal analysis
-    const systemMessage = 'You are a legal assistant specializing in Indian Penal Code (IPC). Provide relevant IPC sections and brief explanations for given scenarios.';
+    const systemMessage = 'You are a legal assistant specializing in Indian Penal Code (IPC). Always format your responses using proper markdown with clear headers and consistent structure.';
     
     const userPrompt = `
-Analyze the following scenario and provide:
-
-1. Applicable IPC Sections with their titles and brief descriptions
-2. A detailed explanation of how these sections apply to the scenario
-3. Potential legal consequences including punishments
+Analyze the following scenario and provide a detailed legal analysis according to the Indian Penal Code (IPC).
 
 Scenario: ${query}
 
-Format your response clearly with headers for each section.
+Ensure your response follows this EXACT format with proper markdown formatting:
+
+## Applicable IPC Sections
+For each applicable section, use this format:
+- **Section XXX - [Section Title]**: Brief description of the section
+
+## Explanation
+Detailed explanation of why and how these sections apply to the scenario. Use clear paragraphs with proper spacing.
+
+## Potential Legal Consequences
+Detailed information about potential punishments and penalties for each applicable section.
+
+Important formatting instructions:
+1. Use markdown headings with ## for main sections
+2. Use bold (**) for section numbers and titles
+3. Use bullet points (-) for listing sections
+4. Use proper paragraph spacing between sections
 `;
 
     // Prepare the request body for Together AI API
