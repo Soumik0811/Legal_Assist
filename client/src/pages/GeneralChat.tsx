@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { apiRequest } from '@/lib/queryClient';
 import ErrorDisplay from '@/components/ErrorDisplay';
 import { Loader2 } from 'lucide-react';
+import { marked } from 'marked';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -51,6 +52,46 @@ export default function GeneralChat() {
     }
   };
 
+  // Configure marked options for custom rendering
+  marked.setOptions({
+    gfm: true, // GitHub flavored markdown
+    breaks: true, // Convert line breaks to <br>
+  });
+  
+  // Custom styles for markdown elements
+  const customStyles = `
+    <style>
+      .markdown-content h2 {
+        color: #60a5fa; /* blue-400 */
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid #4b5563; /* gray-600 */
+        padding-bottom: 0.5rem;
+      }
+      
+      .markdown-content p {
+        margin-bottom: 1rem;
+        line-height: 1.6;
+      }
+      
+      .markdown-content ul {
+        margin-left: 1.5rem;
+        margin-bottom: 1rem;
+      }
+      
+      .markdown-content li {
+        margin-bottom: 0.5rem;
+      }
+      
+      .markdown-content strong {
+        color: #f9fafb; /* gray-50 */
+        font-weight: 600;
+      }
+    </style>
+  `;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
       <div className="container mx-auto px-4 py-8 max-w-5xl">
@@ -76,13 +117,17 @@ export default function GeneralChat() {
                     className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div 
-                      className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                      className={`max-w-[90%] rounded-lg px-4 py-2 ${
                         message.role === 'user' 
                           ? 'bg-blue-600 text-white' 
                           : 'bg-gray-700 text-gray-200'
-                      }`}
+                      } ${message.role === 'assistant' ? 'markdown-content' : ''}`}
                     >
-                      {message.content}
+                      {message.role === 'assistant' ? (
+                        <div dangerouslySetInnerHTML={{ __html: customStyles + marked.parse(message.content) }} />
+                      ) : (
+                        message.content
+                      )}
                     </div>
                   </div>
                 ))}
