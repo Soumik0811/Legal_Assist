@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import ErrorDisplay from '@/components/ErrorDisplay';
 import { Loader2, Search, ExternalLink } from 'lucide-react';
-
+import { marked } from "marked";
 // Indian Kanoon API result interface
 interface IndianKanoonResult {
   title: string;
@@ -122,7 +122,11 @@ export default function CaseLaw() {
                       <td className="py-3 px-4 text-sm text-gray-200">{result.title || 'N/A'}</td>
                       <td className="py-3 px-4 text-sm text-gray-200">{result.publishdate || 'N/A'}</td>
                       <td className="py-3 px-4 text-sm text-gray-200">{result.docsource || 'N/A'}</td>
-                      <td className="py-3 px-4 text-sm text-gray-200">{result.headline || 'N/A'}</td>
+                      <td className="py-3 px-4 text-sm text-gray-200"
+                        dangerouslySetInnerHTML={{
+                          __html: marked.parse(result.headline || "N/A"),
+                        }}
+                      />
                       <td className="py-3 px-4 text-sm">
                         <a 
                           href={`https://indiankanoon.org/doc/${result.tid}`} 
