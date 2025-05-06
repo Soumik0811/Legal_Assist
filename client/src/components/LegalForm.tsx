@@ -98,31 +98,53 @@ export default function LegalForm({ query, setQuery, loading, handleSubmit }: Le
 
     // Handle end of recognition
     recognitionRef.current.onend = () => {
+      // Only restart if still in listening mode
       if (isListening) {
-        // Restart recognition if it was still supposed to be listening
-        recognitionRef.current.start();
+        try {
+          recognitionRef.current.start();
+        } catch (error) {
+          console.error('Failed to restart recognition:', error);
+          setIsListening(false);
+        }
       }
     };
 
     // Clean up on unmount
     return () => {
       if (recognitionRef.current) {
-        recognitionRef.current.stop();
+        try {
+          recognitionRef.current.stop();
+        } catch (error) {
+          console.error('Error stopping recognition on unmount:', error);
+        }
       }
     };
-  }, [isListening, language]);
+  }, [language]); // Remove isListening from dependencies to prevent recreation
+
+  // Separate effect to handle starting/stopping recognition when isListening changes
+  useEffect(() => {
+    // Skip if speech recognition is not supported or not initialized
+    if (!speechSupported || !recognitionRef.current) return;
+    
+    if (isListening) {
+      try {
+        recognitionRef.current.start();
+      } catch (error) {
+        console.error('Failed to start recognition:', error);
+        setIsListening(false);
+      }
+    } else {
+      try {
+        recognitionRef.current.stop();
+      } catch (error) {
+        console.error('Failed to stop recognition:', error);
+      }
+    }
+  }, [isListening, speechSupported]);
 
   const toggleListening = () => {
-    if (isListening) {
-      // Stop listening
-      recognitionRef.current?.stop();
-      setIsListening(false);
-    } else {
-      // Start listening and clear any previous errors
-      setRecognitionError('');
-      recognitionRef.current?.start();
-      setIsListening(true);
-    }
+    setIsListening(prevState => !prevState);
+    setRecognitionError(''); // Clear any previous errors
   };
   
   // Handle file upload trigger
@@ -239,16 +261,18 @@ export default function LegalForm({ query, setQuery, loading, handleSubmit }: Le
                   type="button"
                   onClick={toggleListening}
                   disabled={loading || uploadingAudio}
-                  className={`p-2 rounded-full transition-colors ${
+                  className={`p-2 rounded-full transition-colors flex items-center ${
                     isListening 
-                      ? 'bg-red-600 hover:bg-red-700 text-white' 
+                      ? 'bg-red-600 hover:bg-red-700 text-white animate-pulse' 
                       : 'bg-blue-600 hover:bg-blue-700 text-white'
                   } disabled:opacity-50 disabled:cursor-not-allowed mr-2`}
                   title={isListening ? 'Stop voice input' : `Start voice input (${language === 'hi-IN' ? 'Hindi' : 'English'})`}
                 >
                   {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
                 </button>
-                <span className="text-xs text-gray-400">{isListening ? 'Recording...' : 'Voice input'}</span>
+                <span className={`text-xs ${isListening ? 'text-red-400' : 'text-gray-400'}`}>
+                  {isListening ? 'Click to stop recording' : 'Voice input'}
+                </span>
               </div>
             )}
           </div>
